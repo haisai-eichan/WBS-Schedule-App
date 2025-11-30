@@ -1,0 +1,78 @@
+.title {
+    font-size: 2rem;
+    margin: 2rem 0;
+    font-weight: 800;
+}
+
+.form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.sectionTitle {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.field label {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.field input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--card-border);
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 1rem;
+}
+
+.field input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.templates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.templateCard {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    padding: 1.5rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.templateCard:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.selected {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 1px var(--primary);
+}
+
+.actions {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: flex-end;
+}
