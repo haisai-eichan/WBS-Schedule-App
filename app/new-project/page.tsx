@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateWBS, TEMPLATES } from '@/lib/wbsTemplates';
 import { generateTasksFromText } from '@/lib/smartScheduleGenerator';
-import { saveProject, Project } from '@/lib/storage';
+import { createProject, Project } from '@/lib/storage';
 import { calculateSchedule } from '@/lib/scheduleCalculator';
 import styles from './page.module.css';
 
 export default function NewProject() {
     const router = useRouter();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // デフォルトの開始日と納品日を設定
     const today = new Date();
@@ -28,47 +29,55 @@ export default function NewProject() {
         dueDate: defaultDueDate,
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return;
+        setIsSubmitting(true);
 
-        // WBSを生成 (要件テキストがある場合はAI簡易生成、なければテンプレート)
-        let tasks;
-        if (formData.requirements && formData.requirements.trim().length > 10) {
-            tasks = generateTasksFromText(formData.requirements);
-        } else {
-            tasks = generateWBS(formData.template as keyof typeof TEMPLATES);
+        try {
+            // WBSを生成 (要件テキストがある場合はAI簡易生成、なければテンプレート)
+            let tasks;
+            if (formData.requirements && formData.requirements.trim().length > 10) {
+                tasks = generateTasksFromText(formData.requirements);
+            } else {
+                tasks = generateWBS(formData.template as keyof typeof TEMPLATES);
+            }
+
+            // スケジュールを自動計算
+            const calculatedTasks = calculateSchedule(
+                tasks,
+                new Date(formData.startDate),
+                new Date(formData.dueDate),
+                new Date(formData.dueDate), // deliveryDate defaults to dueDate initially
+                [] as string[],
+                new Date() // 現在日時
+            );
+
+            const newProject: Project = {
+                id: crypto.randomUUID(),
+                name: formData.name,
+                clientName: formData.clientName,
+                template: formData.template,
+                createdAt: new Date().toISOString(),
+                tasks: calculatedTasks,
+                stakeholders: {
+                    director: formData.director,
+                    agency: formData.agency,
+                    client: formData.client,
+                },
+                startDate: formData.startDate,
+                deliveryDate: formData.dueDate, // Default to dueDate
+                dueDate: formData.dueDate,
+                customHolidays: [],
+            };
+
+            await createProject(newProject);
+            router.push(`/project/${newProject.id}`);
+        } catch (error) {
+            console.error('Failed to create project:', error);
+            setIsSubmitting(false);
+            alert('プロジェクトの作成に失敗しました。');
         }
-
-        // スケジュールを自動計算
-        const calculatedTasks = calculateSchedule(
-            tasks,
-            new Date(formData.startDate),
-            new Date(formData.dueDate),
-            new Date(formData.dueDate), // deliveryDate defaults to dueDate initially
-            [] as string[],
-            new Date() // 現在日時
-        );
-
-        const newProject: Project = {
-            id: crypto.randomUUID(),
-            name: formData.name,
-            clientName: formData.clientName,
-            template: formData.template,
-            createdAt: new Date().toISOString(),
-            tasks: calculatedTasks,
-            stakeholders: {
-                director: formData.director,
-                agency: formData.agency,
-                client: formData.client,
-            },
-            startDate: formData.startDate,
-            deliveryDate: formData.dueDate, // Default to dueDate
-            dueDate: formData.dueDate,
-            customHolidays: [],
-        };
-
-        saveProject(newProject);
-        router.push(`/project/${newProject.id}`);
     };
 
     return (
@@ -197,8 +206,8 @@ export default function NewProject() {
                 </section>
 
                 <div className={styles.actions}>
-                    <button type="submit" className="btn-primary">
-                        プロジェクト作成 & WBS生成
+                    <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                        {isSubmitting ? '作成中...' : 'プロジェクト作成 & WBS生成'}
                     </button>
                 </div>
             </form>

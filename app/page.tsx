@@ -2,21 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getProjects, Project, deleteProject } from '@/lib/storage';
+import { fetchProjects, Project, deleteProject } from '@/lib/storage';
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setProjects(getProjects());
+    fetchProjects().then(data => {
+      setProjects(data);
+      setLoading(false);
+    });
   }, []);
 
-  const handleDelete = (e: React.MouseEvent, id: string, name: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
     e.preventDefault();
     e.stopPropagation();
     if (confirm(`本当にプロジェクト「${name}」を削除しますか？\nこの操作は取り消せません。`)) {
-      deleteProject(id);
-      setProjects(getProjects());
+      await deleteProject(id);
+      const data = await fetchProjects();
+      setProjects(data);
     }
   };
 
@@ -37,7 +42,11 @@ export default function Home() {
       <section>
         <h2 style={{ fontSize: "1.5rem", marginBottom: "1.5rem", borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Active Projects</h2>
 
-        {projects.length === 0 ? (
+        {loading ? (
+          <div className="glass-panel" style={{ padding: "3rem", textAlign: "center", color: "#666" }}>
+            <p>Loading projects...</p>
+          </div>
+        ) : projects.length === 0 ? (
           <div className="glass-panel" style={{ padding: "3rem", textAlign: "center", color: "#666" }}>
             <p style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>No projects found yet.</p>
             <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>Start by creating your first project schedule.</p>

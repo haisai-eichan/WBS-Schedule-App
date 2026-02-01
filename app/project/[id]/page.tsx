@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Project, getProjectById, updateProject } from '@/lib/storage';
+import { Project, fetchProjectById, updateProject } from '@/lib/storage';
 import { calculateSchedule, validateSchedule, calculateProgress, calculateProjectFinancials } from '@/lib/scheduleCalculator';
 import WBSEditor from '@/components/WBSEditor';
 import Link from 'next/link';
 
 const CurrencyInput = ({ value, onChange, disabled }: { value: number, onChange: (val: number) => void, disabled?: boolean }) => {
+    // ... (CurrencyInput internals unchanged) ...
     const [isFocused, setIsFocused] = useState(false);
     const [inputValue, setInputValue] = useState('');
 
@@ -30,11 +31,8 @@ const CurrencyInput = ({ value, onChange, disabled }: { value: number, onChange:
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let val = e.target.value;
-        // 全角数字を半角に変換
         val = val.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-        // 数字以外を削除
         val = val.replace(/[^0-9]/g, '');
-        // 数値化（先頭の0も消える）
         const num = parseInt(val, 10);
         if (!isNaN(num)) {
             onChange(num);
@@ -87,12 +85,11 @@ export default function ProjectDetail() {
 
     useEffect(() => {
         if (params.id) {
-            const found = getProjectById(params.id as string);
-            if (found) setProject(found);
+            fetchProjectById(params.id as string).then(setProject);
         }
     }, [params.id]);
 
-    const handleUpdate = (updatedProject: Project) => {
+    const handleUpdate = async (updatedProject: Project) => {
         // タスク更新時に自動再計算
         const recalculatedTasks = calculateSchedule(
             updatedProject.tasks,
@@ -104,7 +101,7 @@ export default function ProjectDetail() {
         );
         const finalProject = { ...updatedProject, tasks: recalculatedTasks };
         setProject(finalProject);
-        updateProject(finalProject);
+        await updateProject(finalProject);
     };
 
     const handleProjectFieldChange = (field: keyof Project, value: any) => {
