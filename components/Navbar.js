@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import styles from './Navbar.module.css';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
     return (
@@ -13,6 +14,7 @@ export default function Navbar() {
                     <Link href="/settings" className={styles.link}>Settings</Link>
                 </div>
                 <div className={styles.user}>
+                    <ThemeToggle />
                     <div className={styles.avatar}>D</div>
                 </div>
             </div>

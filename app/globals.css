@@ -1,28 +1,49 @@
 :root {
-  /* Premium Color Palette */
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-hover: rgba(255, 255, 255, 0.06);
+  /* Default Light Mode Palette - Slightly Darkened for Contrast */
+  --background: #f1f5f9;
+  --foreground: #0f172a;
 
-  --primary: #3b82f6; /* A refined blue */
-  --primary-glow: rgba(59, 130, 246, 0.5);
-  
-  --accent: #8b5cf6; /* Violet accent */
-  
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  /* Increased opacity */
+  --card-border: rgba(0, 0, 0, 0.1);
+  /* Increased border visibility */
+  --card-hover: rgba(0, 0, 0, 0.02);
+
+  --primary: #2563eb;
+  --primary-glow: rgba(37, 99, 235, 0.3);
+
+  --accent: #7c3aed;
+
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-  
+
   /* Spacing */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
+}
+
+[data-theme='dark'] {
+  /* Premium Dark Mode Palette */
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-hover: rgba(255, 255, 255, 0.06);
+
+  --primary: #3b82f6;
+  --primary-glow: rgba(59, 130, 246, 0.5);
+
+  --accent: #8b5cf6;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 }
 
 * {
@@ -39,6 +60,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  color-scheme: light dark;
 }
 
 a {
@@ -79,4 +101,82 @@ a {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+}
+
+/* Custom Tooltip */
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  cursor: help;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: 280px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  text-align: left;
+  border-radius: 8px;
+  padding: 12px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  white-space: normal;
+}
+
+.tooltip .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Fix for Calendar Icon color via filter */
+/* Light Mode (default) - Icon should be dark */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0);
+  opacity: 1;
+  /* Make it fully visible */
+  padding: 4px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.05);
+  /* Subtle background for button feel */
+  transition: all 0.2s;
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+/* Dark Mode - Icon should be white and bright */
+[data-theme='dark'] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.5);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  background-color: rgba(255, 255, 255, 0.2);
 }
