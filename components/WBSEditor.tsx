@@ -6,6 +6,7 @@ import { WBSTask } from '@/lib/wbsTemplates';
 import { calculateSchedule, deleteTask, moveTaskInSection, moveSection } from '@/lib/scheduleCalculator';
 import { createNewTask, createNewSectionName } from '@/lib/taskHelpers';
 import StatusBadge from './StatusBadge';
+import ConfirmModal from './ConfirmModal';
 import styles from './WBSEditor.module.css';
 
 interface Props {
@@ -33,6 +34,17 @@ export default function WBSEditor({ project, onUpdate, readOnly = false, role = 
     });
     const [showColumnToggle, setShowColumnToggle] = useState(false);
     const columnToggleRef = useRef<HTMLDivElement>(null);
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        message: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        message: '',
+        onConfirm: () => { },
+    });
 
     // Close column toggle when clicking outside
     useEffect(() => {
@@ -129,19 +141,25 @@ export default function WBSEditor({ project, onUpdate, readOnly = false, role = 
         e.preventDefault();
         e.stopPropagation();
         if (readOnly) return;
-        if (!window.confirm('このタスクを削除しますか？')) return;
 
-        const updatedTasks = deleteTask(
-            tasks,
-            taskId,
-            new Date(project.startDate),
-            new Date(project.deliveryDate),
-            new Date(project.dueDate),
-            project.customHolidays || [],
-            new Date()
-        );
-        setTasks(updatedTasks);
-        onUpdate({ ...project, tasks: updatedTasks });
+        setConfirmModal({
+            isOpen: true,
+            message: 'このタスクを削除しますか？',
+            onConfirm: () => {
+                const updatedTasks = deleteTask(
+                    tasks,
+                    taskId,
+                    new Date(project.startDate),
+                    new Date(project.deliveryDate),
+                    new Date(project.dueDate),
+                    project.customHolidays || [],
+                    new Date()
+                );
+                setTasks(updatedTasks);
+                onUpdate({ ...project, tasks: updatedTasks });
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handleMoveTask = (taskId: string, direction: 'up' | 'down') => {
@@ -177,19 +195,23 @@ export default function WBSEditor({ project, onUpdate, readOnly = false, role = 
         if (readOnly) return;
         const sectionTasks = tasks.filter(t => t.section === section);
 
+        let message = '';
         if (sectionTasks.length > 0) {
-            if (!window.confirm(`セクション「${section}」には${sectionTasks.length}件のタスクが含まれています。セクションごと削除しますか？`)) {
-                return;
-            }
+            message = `セクション「${section}」には${sectionTasks.length}件のタスクが含まれています。セクションごと削除しますか？`;
         } else {
-            if (!window.confirm(`セクション「${section}」を削除しますか？`)) {
-                return;
-            }
+            message = `セクション「${section}」を削除しますか？`;
         }
 
-        const newTasks = tasks.filter(t => t.section !== section);
-        const reindexedTasks = newTasks.map((t, i) => ({ ...t, order_index: i }));
-        recalculateAndUpdate(reindexedTasks);
+        setConfirmModal({
+            isOpen: true,
+            message,
+            onConfirm: () => {
+                const newTasks = tasks.filter(t => t.section !== section);
+                const reindexedTasks = newTasks.map((t, i) => ({ ...t, order_index: i }));
+                recalculateAndUpdate(reindexedTasks);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handleMoveSection = (sectionName: string, direction: 'up' | 'down') => {
@@ -546,6 +568,13 @@ export default function WBSEditor({ project, onUpdate, readOnly = false, role = 
                     </button>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                message={confirmModal.message}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }
